@@ -24,7 +24,9 @@ def create_model_data(data):
         "winner_age",
         "loser_age",
         "surface",
-        "best_of"
+        "best_of",
+        "winner_rank_points",
+        "loser_rank_points"
     ]
     
     data = processed_data[selected_cols].copy()
@@ -39,16 +41,21 @@ def create_model_data(data):
     data["player_1_name"] = np.where(data["target"] == 1, data["winner_name"], data["loser_name"])
     data["player_1_rank"] = np.where(data["target"] == 1, data["winner_rank"], data["loser_rank"])
     data["player_1_age"] = np.where(data["target"] == 1, data["winner_age"], data["loser_age"])
-
+    data["player_1_rank_points"] = np.where(data["target"] == 1, data["winner_rank_points"], data["loser_rank_points"])
+    
+    
     data["player_2_id"] = np.where(data["target"] == 1, data["loser_id"], data["winner_id"])
     data["player_2_name"] = np.where(data["target"] == 1, data["loser_name"], data["winner_name"])
     data["player_2_rank"] = np.where(data["target"] == 1, data["loser_rank"], data["winner_rank"])
     data["player_2_age"] = np.where(data["target"] == 1, data["loser_age"], data["winner_age"])
+    data["player_2_rank_points"] = np.where(data["target"] == 1, data["loser_rank_points"], data["winner_rank_points"])
+    
 
     # Difference features
     data["rank_diff"] = data["player_1_rank"] - data["player_2_rank"]
     data["age_diff"] = data["player_1_age"] - data["player_2_age"]
-   
+    #difference in atp points, since ranking sometimes dont fully reflect the gap that there can be between two positions
+    data["rank_points_diff"] = data["player_1_rank_points"] - data["player_2_rank_points"]
 
     # Final clean dataframe
     final_cols = [
@@ -66,11 +73,14 @@ def create_model_data(data):
         "age_diff",
         "surface",
         "best_of",
-        "target"
+        "target",
+        "player_1_rank_points",
+        "player_2_rank_points",
+        "rank_points_diff"
     ]
     
     # Drop rows with missing values in critical columns
-    data = data.dropna(subset=["player_1_rank", "player_2_rank","player_1_age", "player_2_age", "rank_diff", "age_diff", "surface"])
+    data = data.dropna(subset=["player_1_rank", "player_2_rank","player_1_age", "player_2_age", "rank_diff", "age_diff", "surface","rank_points_diff","player_1_rank_points","player_2_rank_points"])
     
     #order matches by date and match number
     data = data.sort_values(by=["tourney_date", "match_num"])
@@ -112,6 +122,7 @@ def create_model_data(data):
     clean_data['h2h_diff'] = clean_data["p1_historical_h2h_wins"] - clean_data["p2_historical_h2h_wins"]
     #number of head to head matches
     clean_data['h2h_matches'] = clean_data["p1_historical_h2h_wins"] + clean_data["p2_historical_h2h_wins"]
+    
 
     clean_data = clean_data.reset_index(drop=True)
 
