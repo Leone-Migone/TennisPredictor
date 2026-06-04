@@ -48,6 +48,7 @@ def create_model_data(data):
     # Difference features
     data["rank_diff"] = data["player_1_rank"] - data["player_2_rank"]
     data["age_diff"] = data["player_1_age"] - data["player_2_age"]
+   
 
     # Final clean dataframe
     final_cols = [
@@ -74,6 +75,45 @@ def create_model_data(data):
     #order matches by date and match number
     data = data.sort_values(by=["tourney_date", "match_num"])
     clean_data = data[final_cols].copy()
+
+    p1_h2h_wins = []
+    p2_h2h_wins = []
+
+    #dictionary that tracks head to heads
+    h2h_tracker = {}
+
+    for i, row in clean_data.iterrows():
+        p1 = row["player_1_id"]
+        p2 = row["player_2_id"]
+        target = row["target"]
+
+        #key to search up rivalry
+        #Sorting them ensures the matchup key is the same regardless of whos p1 or p2    
+        matchup_k = tuple(sorted([p1,p2]))
+
+        #initialize to 0
+        if matchup_k not in h2h_tracker:
+            h2h_tracker[matchup_k] = { p1: 0, p2: 0 }
+        
+        # record win till now
+        p1_h2h_wins.append(h2h_tracker[matchup_k][p1])
+        p2_h2h_wins.append(h2h_tracker[matchup_k][p2])
+
+        # update the tracker with the result of this match for the future
+        
+        if target == 1:
+            h2h_tracker[matchup_k][p1] += 1
+        else:
+            h2h_tracker[matchup_k][p2] += 1
+
+    clean_data['p1_historical_h2h_wins'] = p1_h2h_wins
+    clean_data['p2_historical_h2h_wins'] = p2_h2h_wins
+    #calculate difference in head to head
+    clean_data['h2h_diff'] = clean_data["p1_historical_h2h_wins"] - clean_data["p2_historical_h2h_wins"]
+    #number of head to head matches
+    clean_data['h2h_matches'] = clean_data["p1_historical_h2h_wins"] + clean_data["p2_historical_h2h_wins"]
+
+    clean_data = clean_data.reset_index(drop=True)
 
 
     return clean_data

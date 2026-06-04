@@ -8,6 +8,8 @@ def train_baseline_model(model_data):
     features = [
         "rank_diff",
         "age_diff",
+        "h2h_diff",
+        "h2h_matches",
         "surface",
         "best_of"
     ]
@@ -31,7 +33,7 @@ def train_baseline_model(model_data):
     y_pred = model.predict(x_test)
     accuracy = metrics.accuracy_score(y_test,y_pred)
     
-    print("Baseline Logistic Regression")
+    print("Baseline Logistic Regression with H2H features")
     print("----------------------------")
     print(f"Accuracy: {accuracy:.4f}")
     print()
