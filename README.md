@@ -47,12 +47,21 @@ This suggests that simple head-to-head features did not improve performance for 
 
 The model performs reasonably well for a first baseline, correctly predicting around 66% of match outcomes using only ranking difference, age difference, surface, and match format. The precision, recall, and F1-scores are similar for both classes, suggesting that the model is not heavily biased towards predicting only wins or only losses.
 
+### Logistic Regression with H2H and Ranking Points Difference
+This version added one feature to the previous baseline:
+- `rank_points_diff`: difference between player 1 and player 2's ATP ranking points
 
+The ranking points feature was added because ATP ranking positions do not always reflect the true gap between players. For example, the points gap between rank 1 and rank 2 can be much larger than the gap between rank 50 and rank 51.  
+
+| Model | Features Added | Accuracy |
+|---|---|---:|
+| Baseline Logistic Regression | rank_diff, age_diff, surface, best_of | 0.66 |
+| Logistic Regression + H2H | h2h_diff, h2h_matches | 0.65 |
+| Logistic Regression + H2H + Rank Points | rank_points_diff | 0.6610 |
 
 ## Notes: Ideas, thought process
-### head to head
+### Head to Head
 from our baseline model, first feature I'm thinking would be important to add is a way to track the players head-to-head, since players can be really good and higher ranked than certain oppenent but still suffer their particular playstile and so lose against them, an example could be Felix Auger-Aliassime against Cobolli, Cobolli has never held a higher ATP ranking than FAA, but is known to be one of FAA's weaknesses and has never lost against the latter.
-
 
 ### ELO system
 Since surface its so impacting in tennis matches i decided that each player should be assigned 3 different elos relative to each type of surfaces:   
