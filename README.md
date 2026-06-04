@@ -24,6 +24,25 @@ The baseline Logistic Regression model achieved an accuracy of approximately **6
 | 1 | Player 1 won | 0.65 | 0.68 | 0.67 | 4624 |
 
 Overall accuracy: **0.66**
+
+### Logistic Regression with Head-to-Head Features
+
+A second version of the Logistic Regression model was trained by adding two head-to-head features:
+
+- `h2h_diff`: previous wins by player 1 against player 2 minus previous wins by player 2 against player 1
+- `h2h_matches`: total number of previous meetings between the two players
+
+These features were calculated chronologically, meaning that only matches played before the current match were used. This avoids data leakage.
+
+However, the model accuracy decreased slightly from approximately **66%** to **65%**.
+
+| Model | Features | Accuracy |
+|---|---|---:|
+| Baseline Logistic Regression | rank_diff, age_diff, surface, best_of | 0.66 |
+| Logistic Regression + H2H | + h2h_diff, h2h_matches | 0.65 |
+
+This suggests that simple head-to-head features did not improve performance for this model. One reason may be that many player pairings have no previous meetings, meaning the H2H values are often zero. Another reason is that older head-to-head results may not reflect the players' current ability.
+
 ### Interpretation
 
 The model performs reasonably well for a first baseline, correctly predicting around 66% of match outcomes using only ranking difference, age difference, surface, and match format. The precision, recall, and F1-scores are similar for both classes, suggesting that the model is not heavily biased towards predicting only wins or only losses.
