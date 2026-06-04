@@ -30,7 +30,11 @@ The model performs reasonably well for a first baseline, correctly predicting ar
 
 
 
-## Ideas, thought process
+## Notes: Ideas, thought process
+### head to head
+from our baseline model, first feature I'm thinking would be important to add is a way to track the players head-to-head, since players can be really good and higher ranked than certain oppenent but still suffer their particular playstile and so lose against them, an example could be Felix Auger-Aliassime against Cobolli, Cobolli has never held a higher ATP ranking than FAA, but is known to be one of FAA's weaknesses and has never lost against the latter.
+
+
 ### ELO system
 Since surface its so impacting in tennis matches i decided that each player should be assigned 3 different elos relative to each type of surfaces:   
 hELO: for hard courts  

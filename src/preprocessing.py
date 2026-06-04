@@ -13,6 +13,8 @@ def create_model_data(data):
 
     #FOR NOW ONLY USING THIS SIMPLIFIED DATABASE
     selected_cols = [
+        "tourney_date",
+        "match_num",
         "winner_name",
         "winner_id",
         "loser_name",
@@ -49,6 +51,8 @@ def create_model_data(data):
 
     # Final clean dataframe
     final_cols = [
+        "tourney_date",
+        "match_num",
         "player_1_id",
         "player_1_name",
         "player_2_id",
@@ -66,7 +70,10 @@ def create_model_data(data):
     
     # Drop rows with missing values in critical columns
     data = data.dropna(subset=["player_1_rank", "player_2_rank","player_1_age", "player_2_age", "rank_diff", "age_diff", "surface"])
-
+    
+    #order matches by date and match number
+    data = data.sort_values(by=["tourney_date", "match_num"])
     clean_data = data[final_cols].copy()
+
 
     return clean_data
