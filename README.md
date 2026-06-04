@@ -2,7 +2,31 @@
 This project aims to build a tennis match prediction system using historical ATP match data. The main goal is to explore how player performance, tournament conditions, rankings, and match history can be used to estimate the likely winner of a match. My inspiration for this project came from the youtube channel Green Code.
 ## Project LogBook   
 04/06/2026 For my first approach this project I decided to initially just use a limited database to then increment progressively the complexity and techicality of the system. I started by defining the repository structure, import the csvs containing the data and starting the preprocessing
-05/06/2026 developed basic idea of evaluation model, i decided to keep it simple initially taking only account of difference in ranking, difference in age, surface of the court and the number of set needed in order to win (3,5).   
+05/06/2026 developed basic idea of evaluation model, i decided to keep it simple initially taking only account of difference in ranking, difference in age, surface of the court and the number of set needed in order to win (3,5) using a linear regression. with this first model I'm getting a fairly solid first baseline.  
+
+
+## Models
+#### 1.Baseline Logistic Regression
+The baseline model used only a small number of pre-match features:
+- `rank_diff`: difference between player 1's ATP ranking and player 2's ATP ranking
+- `age_diff`: difference between player 1's age and player 2's age
+- `surface`: court surface, one-hot encoded
+- `best_of`: whether the match was best of 3 or best of 5 sets
+Accuracy: 66%
+
+### Results
+
+The baseline Logistic Regression model achieved an accuracy of approximately **66%** on the test set.
+
+| Class | Meaning | Precision | Recall | F1-score | Support |
+|---|---|---:|---:|---:|---:|
+| 0 | Player 1 lost | 0.66 | 0.64 | 0.65 | 4552 |
+| 1 | Player 1 won | 0.65 | 0.68 | 0.67 | 4624 |
+
+Overall accuracy: **0.66**
+### Interpretation
+
+The model performs reasonably well for a first baseline, correctly predicting around 66% of match outcomes using only ranking difference, age difference, surface, and match format. The precision, recall, and F1-scores are similar for both classes, suggesting that the model is not heavily biased towards predicting only wins or only losses.
 
 
 
