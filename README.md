@@ -83,3 +83,18 @@ I thought an elo system could be a good idea to improve the quality of the predi
 - `hElo`: hard court Elo
 - `gElo`: grass court Elo
 - `cElo`: clay court Elo
+
+#### How does ELO work?
+Elo is a rating system used to estimate the relative strength of two players. Each player starts with an initial rating, for example 1500. Before a match, the difference between the two players' ratings is used to calculate the expected probability of each player winning. After the match, the winner gains rating points and the loser loses rating points. The amount gained or lost depends on how surprising the result was: beating a much lower-rated player gives only a small increase, while beating a much higher-rated player gives a larger increase.
+
+The expected score for player A is calculated as:
+
+`E_A = 1 / (1 + 10^((R_B - R_A) / 400))`
+
+where `R_A` is player A's rating and `R_B` is player B's rating.
+
+After the match, player A's rating is updated using:
+
+`R_A_new = R_A + K * (S_A - E_A)`
+
+where `R_A_new` is the new rating, `K` controls how quickly ratings change, `S_A` is the actual result of the match, with `1` for a win and `0` for a loss, and `E_A` is the expected score before the match.
