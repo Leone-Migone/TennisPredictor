@@ -76,7 +76,10 @@ The time-based split produced lower accuracy than the random split, which is exp
 from our baseline model, first feature I'm thinking would be important to add is a way to track the players head-to-head, since players can be really good and higher ranked than certain oppenent but still suffer their particular playstile and so lose against them, an example could be Felix Auger-Aliassime against Cobolli, Cobolli has never held a higher ATP ranking than FAA, but is known to be one of FAA's weaknesses and has never lost against the latter.
 
 ### ELO system
-Since surface its so impacting in tennis matches i decided that each player should be assigned 3 different elos relative to each type of surfaces:   
-hELO: for hard courts  
-gELO: for grass courts  
-cELO: for clay courts  
+I thought an elo system could be a good idea to improve the quality of the predictive model, this for 2 main reasons:  
+1. the ATP ranking points, even if they could be seen as a sort of ELO system equivalent system, do not alway correctly indicate the level of ability of a player, this because they are based on the previous year results, compared to their performance in each tournament this season, whether they have to defends the points gained the previous year or attempt to gain more by going further (compared to the previous year) in the tournament.
+2. Secondly, court surface has a major impact on tennis performance. Some players perform much better on certain surfaces than others, so using only one general rating could hide important differences in ability. For this reason, I am planning to create separate Elo ratings for each surface type:
+
+- `hElo`: hard court Elo
+- `gElo`: grass court Elo
+- `cElo`: clay court Elo
