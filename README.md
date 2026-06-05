@@ -98,3 +98,5 @@ After the match, player A's rating is updated using:
 `R_A_new = R_A + K * (S_A - E_A)`
 
 where `R_A_new` is the new rating, `K` controls how quickly ratings change, `S_A` is the actual result of the match, with `1` for a win and `0` for a loss, and `E_A` is the expected score before the match.
+
+#### What K should i use for tennis
