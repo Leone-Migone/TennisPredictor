@@ -59,6 +59,18 @@ The ranking points feature was added because ATP ranking positions do not always
 | Logistic Regression + H2H | h2h_diff, h2h_matches | 0.65 |
 | Logistic Regression + H2H + Rank Points | rank_points_diff | 0.6610 |
 
+### Time-Based Model Comparison and introduction of Random Forest
+
+After initially testing models using a random train/test split, a chronological split was introduced to better reflect a real prediction scenario. Matches before 2024 were used for training, while matches from 2024 onwards were used for testing.
+
+| Model | Split Type | Accuracy |
+|---|---|---:|
+| Logistic Regression | Random split | 0.661 |
+| Logistic Regression | Time-based split | 0.641213 |
+| Random Forest | Time-based split | 0.624876 |
+
+The time-based split produced lower accuracy than the random split, which is expected because it prevents the model from training on future matches. Logistic Regression performed slightly better than Random Forest on the current feature set, suggesting that the current features mainly provide linear predictive signals, particularly ranking difference and ranking points difference.
+
 ## Notes: Ideas, thought process
 ### Head to Head
 from our baseline model, first feature I'm thinking would be important to add is a way to track the players head-to-head, since players can be really good and higher ranked than certain oppenent but still suffer their particular playstile and so lose against them, an example could be Felix Auger-Aliassime against Cobolli, Cobolli has never held a higher ATP ranking than FAA, but is known to be one of FAA's weaknesses and has never lost against the latter.
