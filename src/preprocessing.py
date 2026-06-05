@@ -89,18 +89,52 @@ def create_model_data(data):
     p1_h2h_wins = []
     p2_h2h_wins = []
 
+    p1_form = []
+    p2_form = []
+    p1_recent_matches = []
+    p2_recent_matches = []
+
     #dictionary that tracks head to heads
     h2h_tracker = {}
+    form_tracker = {}
 
     for i, row in clean_data.iterrows():
         p1 = row["player_1_id"]
         p2 = row["player_2_id"]
         target = row["target"]
-
+        
+        
         #key to search up rivalry
         #Sorting them ensures the matchup key is the same regardless of whos p1 or p2    
         matchup_k = tuple(sorted([p1,p2]))
+        
+        #if not played before
+        if p1 not in form_tracker:
+            form_tracker[p1] = []
+        if p2 not in form_tracker:
+            form_tracker[p2] = []
 
+        #get last 10 results
+        p1_ten = form_tracker[p1][-10:]
+        p2_ten = form_tracker[p2][-10:]
+
+        #no history use neutral form
+        if len(p1_ten) == 0:
+            p1_current_form = 0.5
+        else:
+            p1_current_form = sum(p1_ten) / len(p1_ten)
+
+        if len(p2_ten) == 0:
+            p2_current_form = 0.5
+        else:
+            p2_current_form = sum(p2_ten) / len(p2_ten)
+        
+        p1_form.append(p1_current_form)
+        p2_form.append(p2_current_form)
+
+
+        p1_recent_matches.append(len(p1_ten))
+        p2_recent_matches.append(len(p2_ten))
         #initialize to 0
         if matchup_k not in h2h_tracker:
             h2h_tracker[matchup_k] = { p1: 0, p2: 0 }
@@ -110,11 +144,16 @@ def create_model_data(data):
         p2_h2h_wins.append(h2h_tracker[matchup_k][p2])
 
         # update the tracker with the result of this match for the future
-        
         if target == 1:
             h2h_tracker[matchup_k][p1] += 1
+            form_tracker[p1].append(1)
+            form_tracker[p2].append(0)
         else:
             h2h_tracker[matchup_k][p2] += 1
+            form_tracker[p1].append(0)
+            form_tracker[p2].append(1)
+
+        
 
     clean_data['p1_historical_h2h_wins'] = p1_h2h_wins
     clean_data['p2_historical_h2h_wins'] = p2_h2h_wins
@@ -122,6 +161,9 @@ def create_model_data(data):
     clean_data['h2h_diff'] = clean_data["p1_historical_h2h_wins"] - clean_data["p2_historical_h2h_wins"]
     #number of head to head matches
     clean_data['h2h_matches'] = clean_data["p1_historical_h2h_wins"] + clean_data["p2_historical_h2h_wins"]
+    clean_data['p1_form'] = p1_form
+    clean_data['p2_form'] = p2_form
+    clean_data["form_diff"] = clean_data['p1_form'] - clean_data['p2_form']
     
 
     clean_data = clean_data.reset_index(drop=True)

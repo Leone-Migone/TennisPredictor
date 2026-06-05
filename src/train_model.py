@@ -12,7 +12,8 @@ def train_baseline_model(model_data):
         "h2h_matches",
         "surface",
         "best_of",
-        "rank_points_diff"
+        "rank_points_diff",
+        "form_diff"
     ]
 
     target = "target"
@@ -40,7 +41,7 @@ def train_baseline_model(model_data):
     y_pred = model.predict(x_test)
     accuracy = metrics.accuracy_score(y_test,y_pred)
     
-    print("Baseline Logistic Regression with H2H and rank points difference")
+    print("Baseline Logistic Regression with H2H, rank points difference and recent form")
     print("----------------------------")
     print(f"Accuracy: {accuracy*100:.4f}%")
     print()
