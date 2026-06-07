@@ -100,10 +100,14 @@ def create_model_data(data):
     #dictionary that tracks player form
     form_tracker = {}
     #dictionary that tracks players ELO
-    ELO_tracker = {}
+    cELO_tracker = {}
+    hELO_tracker = {}
+    gELO_tracker = {}
 
-    p1ELO = 0
-    p2ELO = 0
+    
+    p1elo_list = []
+    p2elo_list=  []
+
 
 
 
@@ -112,6 +116,12 @@ def create_model_data(data):
         p2 = row["player_2_id"]
         target = row["target"]
         
+        if (row["surface"] == "Hard"):
+            ELO_tracker = hELO_tracker
+        elif(row["surface"] == "Grass"):
+            ELO_tracker = gELO_tracker
+        else:
+            ELO_tracker = cELO_tracker   
         
         #key to search up rivalry
         #Sorting them ensures the matchup key is the same regardless of whos p1 or p2    
@@ -122,7 +132,7 @@ def create_model_data(data):
             form_tracker[p1] = []
         if p2 not in form_tracker:
             form_tracker[p2] = []
-
+        
         if p1 not in ELO_tracker:
             ELO_tracker[p1] = 1500
         if p2 not in ELO_tracker:
@@ -160,11 +170,12 @@ def create_model_data(data):
 
         p1ELO = ELO_tracker[p1]
         p2ELO = ELO_tracker[p2]
+        p1elo_list.append(p1ELO)
+        p2elo_list.append(p2ELO)
 
         #expected probability based on ELO
         E_a = 1 / (1 + 10**((p2ELO-p1ELO)/400))
-        
-
+        E_b = 1 - E_a
         # update the tracker with the result of this match for the future
         if target == 1:
             h2h_tracker[matchup_k][p1] += 1
@@ -172,14 +183,15 @@ def create_model_data(data):
             form_tracker[p2].append(0)
             #update ELO with match result
             ELO_tracker[p1] = p1ELO + 32 * (1 - E_a) 
-            ELO_tracker[p2] = p2ELO + 32 * (0 - E_a)
+            ELO_tracker[p2] = p2ELO + 32 * (0 - E_b)
+
 
         else:
             h2h_tracker[matchup_k][p2] += 1
             form_tracker[p1].append(0)
             form_tracker[p2].append(1)
             ELO_tracker[p1] = p1ELO + 32 * (0 - E_a) 
-            ELO_tracker[p2] = p2ELO + 32 * (1 - E_a)
+            ELO_tracker[p2] = p2ELO + 32 * (1 - E_b)
 
         
 
@@ -193,9 +205,11 @@ def create_model_data(data):
     clean_data['p2_form'] = p2_form
     clean_data["form_diff"] = clean_data['p1_form'] - clean_data['p2_form']
     #elo for each player and helo diff
-    clean_data["p1_elo"] = ELO_tracker[p1]
-    clean_data["p2_elo"] = ELO_tracker[p2]
-    clean_data["elo_diff"] = clean_data["p1_elo"] - clean_data["p2_elo"]
+    clean_data["p1_surface_elo"] = p1elo_list
+    clean_data["p2_surface_elo"] = p2elo_list
+    clean_data["surface_elo_diff"] = (
+        clean_data["p1_surface_elo"] - clean_data["p2_surface_elo"]
+    )
     clean_data = clean_data.reset_index(drop=True)
 
 
