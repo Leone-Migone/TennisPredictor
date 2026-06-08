@@ -1,9 +1,23 @@
 # TennisPredictor
 This project aims to build a tennis match prediction system using historical ATP match data. The main goal is to explore how player performance, tournament conditions, rankings, and match history can be used to estimate the likely winner of a match. My inspiration for this project came from the youtube channel Green Code.
 ## Project LogBook   
-04/06/2026 For my first approach this project I decided to initially just use a limited database to then increment progressively the complexity and techicality of the system. I started by defining the repository structure, import the csvs containing the data and starting the preprocessing
-05/06/2026 developed basic idea of evaluation model, i decided to keep it simple initially taking only account of difference in ranking, difference in age, surface of the court and the number of set needed in order to win (3,5) using a logistic regression. with this first model I'm getting a fairly solid first baseline.  
-
+04/06/2026  
+For my first approach this project I decided to initially just use a limited database to then increment progressively the complexity and techicality of the system. I started by defining the repository structure, import the csvs containing the data and starting the preprocessing   
+  
+05/06/2026  
+developed basic idea of evaluation model, i decided to keep it simple initially taking only account of difference in ranking, difference in age, surface of the court and the number of set needed in order to win (3,5) using a logistic regression. with this first model I'm getting a fairly solid first baseline.   
+  
+06/06/2026  
+Added head-to-head statistics and ATP ranking points difference. These features were computed chronologically to avoid data leakage and to simulate a realistic prediction scenario.  
+  
+07/06/2026  
+Changed the evaluation methodology from a random train/test split to a chronological split. Matches before 2024 were used for training and matches from 2024 onward for testing, producing more realistic estimates of predictive performance.  
+  
+08/06/2026  
+Implemented two new features:  
+Recent form, based on the previous ten matches played by each player.  
+Surface-specific Elo ratings (hard, clay and grass).  
+Separate Elo systems were maintained for each surface and updated chronologically after every match. The addition of surface-specific Elo provided the largest improvement so far, increasing accuracy from 64.58% to 65.30%.
 
 ## Models
 #### 1.Baseline Logistic Regression
@@ -71,6 +85,63 @@ After initially testing models using a random train/test split, a chronological 
 
 The time-based split produced lower accuracy than the random split, which is expected because it prevents the model from training on future matches. Logistic Regression performed slightly better than Random Forest on the current feature set, suggesting that the current features mainly provide linear predictive signals, particularly ranking difference and ranking points difference.
 
+
+## Logistic Regression with Recent Form and Surface-Specific Elo
+
+To further improve the model, a player form feature and a surface-specific Elo system were introduced.
+
+### Recent Form
+
+For each player, recent form was calculated using the outcomes of their previous ten matches. Form is represented as the proportion of wins in those matches. If a player had no previous matches in the dataset, a neutral value of 0.5 was assigned.
+
+### Surface-Specific Elo
+
+An Elo rating system was implemented to estimate the relative strength of players. Unlike ATP ranking points, Elo ratings are updated after every match and therefore react more quickly to changes in performance.
+
+Since court surface has a significant influence on tennis matches, separate Elo ratings were maintained for each surface:
+
+* **hElo**: Hard court Elo
+* **gElo**: Grass court Elo
+* **cElo**: Clay court Elo
+
+Before each match, the players' Elo ratings for the corresponding surface were used to compute the feature:
+
+* **surface_elo_diff** = Player 1 surface Elo − Player 2 surface Elo
+
+The ratings were updated chronologically after every match using the standard Elo formula:
+
+```
+Expected score:
+
+E_A = 1 / (1 + 10^((R_B - R_A)/400))
+
+Rating update:
+
+R_A_new = R_A + K × (S_A − E_A)
+```
+
+where:
+
+* `R_A` and `R_B` are the players' current ratings;
+* `S_A` is the match result (1 for a win and 0 for a loss);
+* `K = 32` controls how quickly ratings change;
+* `E_A` is the expected probability of player A winning.
+
+### Results
+
+Using a chronological split, with matches before 2024 used for training and matches from 2024 onwards used for testing, the following results were obtained:
+
+| Model                                                                      |   Accuracy |
+| -------------------------------------------------------------------------- | ---------: |
+| Logistic Regression + rank difference + age difference + surface + best of |     64.12% |
+| + Head-to-head features                                                    |     64.45% |
+| + Ranking points difference                                                |     64.58% |
+| + Recent form                                                              |     64.58% |
+| + Surface-specific Elo                                                     | **65.30%** |
+
+The introduction of surface-specific Elo produced the largest improvement among the additional features tested. This suggests that player strength varies considerably across different surfaces and that a dynamic rating system captures this information more effectively than ATP rankings alone.
+
+
 ## Notes: Ideas, thought process
 ### Head to Head
 from our baseline model, first feature I'm thinking would be important to add is a way to track the players head-to-head, since players can be really good and higher ranked than certain oppenent but still suffer their particular playstile and so lose against them, an example could be Felix Auger-Aliassime against Cobolli, Cobolli has never held a higher ATP ranking than FAA, but is known to be one of FAA's weaknesses and has never lost against the latter.
@@ -99,4 +170,3 @@ After the match, player A's rating is updated using:
 
 where `R_A_new` is the new rating, `K` controls how quickly ratings change, `S_A` is the actual result of the match, with `1` for a win and `0` for a loss, and `E_A` is the expected score before the match.
 
-#### What K should i use for tennis
