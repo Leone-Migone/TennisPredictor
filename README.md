@@ -86,15 +86,15 @@ After initially testing models using a random train/test split, a chronological 
 The time-based split produced lower accuracy than the random split, which is expected because it prevents the model from training on future matches. Logistic Regression performed slightly better than Random Forest on the current feature set, suggesting that the current features mainly provide linear predictive signals, particularly ranking difference and ranking points difference.
 
 
-## Logistic Regression with Recent Form and Surface-Specific Elo
+### Logistic Regression with Recent Form and Surface-Specific Elo
 
 To further improve the model, a player form feature and a surface-specific Elo system were introduced.
 
-### Recent Form
+#### Recent Form
 
 For each player, recent form was calculated using the outcomes of their previous ten matches. Form is represented as the proportion of wins in those matches. If a player had no previous matches in the dataset, a neutral value of 0.5 was assigned.
 
-### Surface-Specific Elo
+#### Surface-Specific Elo
 
 An Elo rating system was implemented to estimate the relative strength of players. Unlike ATP ranking points, Elo ratings are updated after every match and therefore react more quickly to changes in performance.
 
@@ -127,7 +127,7 @@ where:
 * `K = 32` controls how quickly ratings change;
 * `E_A` is the expected probability of player A winning.
 
-### Results
+#### Results
 
 Using a chronological split, with matches before 2024 used for training and matches from 2024 onwards used for testing, the following results were obtained:
 
@@ -141,6 +141,62 @@ Using a chronological split, with matches before 2024 used for training and matc
 
 The introduction of surface-specific Elo produced the largest improvement among the additional features tested. This suggests that player strength varies considerably across different surfaces and that a dynamic rating system captures this information more effectively than ATP rankings alone.
 
+### XGBoost
+
+After experimenting with Logistic Regression and Random Forest, an XGBoost classifier was introduced. XGBoost is a gradient boosting algorithm that builds an ensemble of decision trees sequentially, with each new tree attempting to correct the errors made by the previous trees. Unlike Logistic Regression, XGBoost is capable of modelling nonlinear relationships and interactions between features.
+
+The model was trained using the same chronological split as previous experiments, with matches before 2024 used for training and matches from 2024 onwards used for testing.
+
+#### Features Used
+
+- `rank_diff`
+- `age_diff`
+- `h2h_diff`
+- `h2h_matches`
+- `rank_points_diff`
+- `form_diff`
+- `surface_elo_diff`
+- `surface`
+- `best_of`
+
+#### Hyperparameters
+
+```python
+n_estimators = 300
+max_depth = 4
+learning_rate = 0.05
+subsample = 0.8
+colsample_bytree = 0.8
+```
+
+#### Results
+
+| Model | Accuracy |
+|---------|---------:|
+| Logistic Regression + Surface Elo | 65.30% |
+| XGBoost | **65.36%** |
+
+#### Confusion Matrix
+
+| | Predicted Loss | Predicted Win |
+|---|---:|---:|
+| Actual Loss | 2263 | 1198 |
+| Actual Win | 1294 | 2439 |
+
+#### Classification Report
+
+| Class | Precision | Recall | F1-score |
+|---|---:|---:|---:|
+| Player 1 Lost | 0.64 | 0.65 | 0.64 |
+| Player 1 Won | 0.67 | 0.65 | 0.66 |
+
+Overall accuracy: **65.36%**
+
+### Interpretation
+
+XGBoost achieved a slight improvement over the previous Logistic Regression model, increasing accuracy from **65.30%** to **65.36%**. Although the improvement is relatively small, it demonstrates that nonlinear models can extract a small amount of additional information from the current feature set.
+
+The modest gain also suggests that the current features already capture much of the predictive information available, meaning that future improvements are likely to come from feature engineering rather than simply increasing model complexity.
 
 ## Notes: Ideas, thought process
 ### Head to Head
