@@ -4,6 +4,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import sklearn.metrics as metrics
 import sklearn as sk
+import xgboost as xgb
+
+
+
 
 def train_baseline_model(model_data):
     features = [
@@ -37,19 +41,29 @@ def train_baseline_model(model_data):
     #That ensures the test set has the same columns as the training set.
     x_test = x_test.reindex(columns=x_train.columns, fill_value=0)
 
-    x_train_scaled = scaler.fit_transform(x_train)
-    x_test_scaled = scaler.transform(x_test)
+    #x_train_scaled = scaler.fit_transform(x_train)
+    #x_test_scaled = scaler.transform(x_test)
+
+
     #rf_model = sk.ensemble.RandomForestClassifier(n_estimators=100, random_state=1)
     #y_pred = model.predict(x_test)    
-    model = sk.linear_model.LogisticRegression(max_iter=100000) 
+    #model = sk.linear_model.LogisticRegression(max_iter=100000) 
+    model = xgb.XGBClassifier(
+    n_estimators=300,
+    max_depth=4,
+    learning_rate=0.05,
+    subsample = 0.8,
+    colsample_bytree = 0.8, 
+    random_state=42
+    )
 
-    model.fit(x_train_scaled, y_train)
+    model.fit(x_train, y_train, eval_set = [(x_test,y_test)], verbose = False)
     
     
-    y_pred = model.predict(x_test_scaled)
+    y_pred = model.predict(x_test)
     accuracy = metrics.accuracy_score(y_test,y_pred)
     
-    print("Logistic Regression with H2H, rank points, recent form, surface Elo and scaling")
+    print("XGBoost with H2H, rank points, recent form, surface Elo")
     print("----------------------------")
     print(f"Accuracy: {accuracy*100:.4f}%")
     print()
