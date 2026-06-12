@@ -1,3 +1,5 @@
+from xml.parsers.expat import model
+
 import pandas as pd
 
 from sklearn.model_selection import train_test_split
@@ -5,6 +7,7 @@ from sklearn.preprocessing import StandardScaler
 import sklearn.metrics as metrics
 import sklearn as sk
 import xgboost as xgb
+import matplotlib.pyplot as plt
 
 
 
@@ -72,5 +75,13 @@ def train_baseline_model(model_data):
     print()
     print("Classification Report:")
     print(metrics.classification_report(y_test, y_pred))
+    
+    xgb.plot_importance(model)
+    plt.tight_layout()
 
+    plt.savefig(
+        "../plots/feature_importance.png",
+        dpi=300,
+        bbox_inches="tight" 
+    )
     return model
