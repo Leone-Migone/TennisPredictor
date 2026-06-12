@@ -107,18 +107,41 @@ def create_model_data(data):
     
     p1elo_list = []
     p2elo_list=  []
+
     p1_general_elo_list = []
     p2_general_elo_list = []
 
+    #matches date formate 19790723 ymd
+    
+    #last match tracker
+    last_match_date = {}
+
+    p1_rest_days = []
+    p2_rest_days = []
 
 
 
     for i, row in clean_data.iterrows():
         p1 = row["player_1_id"]
         p2 = row["player_2_id"]
+
+        current_date = pd.to_datetime(str(row["tourney_date"]))
         target = row["target"]
        
-        
+        if p1 in last_match_date:
+            rest1 = (current_date - last_match_date[p1]).days
+        else:
+            rest1 = 30
+
+        p1_rest_days.append(rest1)
+
+        if p2 in last_match_date:
+            rest2 = (current_date - last_match_date[p2]).days
+        else:
+            rest2 = 30
+
+        p2_rest_days.append(rest2)
+
         if (row["surface"] == "Hard"):
             ELO_tracker = hELO_tracker
         elif(row["surface"] == "Grass"):
@@ -136,11 +159,13 @@ def create_model_data(data):
         if p2 not in form_tracker:
             form_tracker[p2] = []
         
+        #surface elo tracker
         if p1 not in ELO_tracker:
             ELO_tracker[p1] = 1500
         if p2 not in ELO_tracker:
             ELO_tracker[p2] = 1500
-
+        
+        #general elo tracker
         if p1 not in generalELO_tracker:
             generalELO_tracker[p1] = 1500
 
@@ -216,6 +241,10 @@ def create_model_data(data):
             ELO_tracker[p2] = p2ELO + 32 * (1 - E_b)
             generalELO_tracker[p1] = g1 + 32*(0-E_a_general)
             generalELO_tracker[p2] = g2 + 32*(1-E_b_general)
+
+
+        last_match_date[p1] = current_date
+        last_match_date[p2] = current_date
         
 
     clean_data['p1_historical_h2h_wins'] = p1_h2h_wins
@@ -233,7 +262,7 @@ def create_model_data(data):
     clean_data["surface_elo_diff"] = (
         clean_data["p1_surface_elo"] - clean_data["p2_surface_elo"]
     )
-    
+    #general elo
     clean_data["p1_general_elo"] = p1_general_elo_list
     clean_data["p2_general_elo"] = p2_general_elo_list
 
@@ -241,6 +270,14 @@ def create_model_data(data):
         clean_data["p1_general_elo"] - clean_data["p2_general_elo"]
     )
     clean_data = clean_data.reset_index(drop=True)
+    
+    #rest days
+    clean_data["p1_rest_days"] = p1_rest_days
+    clean_data["p2_rest_days"] = p2_rest_days
+
+    clean_data["rest_days_diff"] = (
+    clean_data["p1_rest_days"] - clean_data["p2_rest_days"]
+    )
 
 
     return clean_data

@@ -23,7 +23,8 @@ def train_baseline_model(model_data):
         "rank_points_diff",
         "form_diff",
         "surface_elo_diff",
-        "general_elo_diff"
+        "general_elo_diff",
+        "rest_days_diff"
     ]
 
     target = "target"
