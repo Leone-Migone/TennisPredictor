@@ -251,6 +251,7 @@ One possible explanation is that rest days alone do not capture whether a player
 
 #### Features importance
 
+![features importance for xgboost](./plots/feature_importance.png)
 
 #### Interpretation
 
