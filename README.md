@@ -19,6 +19,47 @@ Recent form, based on the previous ten matches played by each player.
 Surface-specific Elo ratings (hard, clay and grass).  
 Separate Elo systems were maintained for each surface and updated chronologically after every match. The addition of surface-specific Elo provided the largest improvement so far, increasing accuracy from 64.58% to 65.30%.
 
+09/06/2026
+Experimented with Random Forest as an alternative model. Despite its ability to model non-linear relationships, it performed worse than Logistic Regression on the current feature set.
+
+This suggested that the existing features mainly provided linear predictive information.
+
+10/06/2026
+Implemented a recent-form feature based on the previous ten matches played by each player. Players with no previous matches were assigned a neutral form value of 0.5.
+
+The addition of recent form had little impact on overall performance.
+
+10/06/2026
+Designed and implemented a surface-specific Elo system. Separate ratings were maintained for:
+
+- Hard courts
+- Clay courts
+- Grass courts
+
+For each match, only information available before that match was used to compute Elo differences. Surface Elo provided the largest improvement seen so far and highlighted the importance of court surface in tennis.
+
+11/06/2026
+Introduced a general Elo rating in addition to the surface-specific ratings. The idea was to combine overall player strength with surface specialisation.
+
+This resulted in a further improvement and produced the best performance obtained so far.
+
+11/06/2026
+Replaced Logistic Regression with XGBoost in order to capture non-linear relationships between features. Tuned several hyperparameters, including:
+
+- Number of trees
+- Maximum tree depth
+- Learning rate
+- Row subsampling
+- Column subsampling
+
+XGBoost achieved the highest accuracy of the project so far, approximately 65.4%.
+
+12/06/2026
+Investigated whether recovery time affected match outcomes by introducing a rest-days feature. The feature measured the number of days since each player's previous match.
+
+Contrary to expectations, adding rest days reduced model accuracy. This suggests that recovery time alone does not adequately capture fatigue or match sharpness.
+
+
 ## Models
 #### 1.Baseline Logistic Regression
 The baseline model used only a small number of pre-match features:
@@ -151,13 +192,14 @@ The model was trained using the same chronological split as previous experiments
 
 - `rank_diff`
 - `age_diff`
+- `surface`
+- `best_of`
 - `h2h_diff`
 - `h2h_matches`
 - `rank_points_diff`
 - `form_diff`
 - `surface_elo_diff`
-- `surface`
-- `best_of`
+- `general_elo_diff`
 
 #### Hyperparameters
 
@@ -174,29 +216,48 @@ colsample_bytree = 0.8
 | Model | Accuracy |
 |---------|---------:|
 | Logistic Regression + Surface Elo | 65.30% |
-| XGBoost | **65.36%** |
+| Random Forest | 62.49% |
+| XGBoost + Surface Elo | 65.36% |
+| XGBoost + Surface Elo + General Elo | **65.42%** |
+| XGBoost + Surface Elo + General Elo + Rest Days | 65.11% |
 
-#### Confusion Matrix
+#### General Elo
 
-| | Predicted Loss | Predicted Win |
-|---|---:|---:|
-| Actual Loss | 2263 | 1198 |
-| Actual Win | 1294 | 2439 |
+In addition to surface-specific Elo ratings, a general Elo rating was introduced. Unlike surface Elo, which measures performance on a specific court type, general Elo tracks a player's overall strength regardless of surface.
 
-#### Classification Report
+For every match, the feature
 
-| Class | Precision | Recall | F1-score |
-|---|---:|---:|---:|
-| Player 1 Lost | 0.64 | 0.65 | 0.64 |
-| Player 1 Won | 0.67 | 0.65 | 0.66 |
+```
+general_elo_diff = player_1_general_elo - player_2_general_elo
+```
 
-Overall accuracy: **65.36%**
+was calculated using only information available before the current match, ensuring that no future information leaked into the model.
 
-### Interpretation
+Adding this feature produced a small but consistent improvement, increasing accuracy from approximately 65.36% to 65.42%.
 
-XGBoost achieved a slight improvement over the previous Logistic Regression model, increasing accuracy from **65.30%** to **65.36%**. Although the improvement is relatively small, it demonstrates that nonlinear models can extract a small amount of additional information from the current feature set.
+#### Rest Days
 
-The modest gain also suggests that the current features already capture much of the predictive information available, meaning that future improvements are likely to come from feature engineering rather than simply increasing model complexity.
+Another feature investigated was the number of days since each player's previous match. The intuition behind this idea was that fatigue and recovery time may influence performance.
+
+A rest difference feature was defined as:
+
+```
+rest_diff = player_1_rest_days - player_2_rest_days
+```
+
+However, adding this feature reduced accuracy to approximately 65.11%.
+
+One possible explanation is that rest days alone do not capture whether a player benefits from additional recovery or instead loses match rhythm. Furthermore, tournament scheduling means that both players often have similar rest periods, limiting the amount of information provided by the feature.
+
+#### Features importance
+
+
+#### Interpretation
+
+Although the improvements obtained from XGBoost were relatively small, the model consistently outperformed both Logistic Regression and Random Forest. Surface-specific Elo remained one of the most influential features, while the addition of a general Elo rating provided a further modest increase in predictive performance.
+
+The results suggest that dynamic rating systems capture player strength better than static ATP rankings alone, and that combining several sources of information can gradually improve prediction accuracy.
+
 
 ## Notes: Ideas, thought process
 ### Head to Head
