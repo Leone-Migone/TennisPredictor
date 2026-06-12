@@ -103,10 +103,12 @@ def create_model_data(data):
     cELO_tracker = {}
     hELO_tracker = {}
     gELO_tracker = {}
-
+    generalELO_tracker = {}
     
     p1elo_list = []
     p2elo_list=  []
+    p1_general_elo_list = []
+    p2_general_elo_list = []
 
 
 
@@ -115,6 +117,7 @@ def create_model_data(data):
         p1 = row["player_1_id"]
         p2 = row["player_2_id"]
         target = row["target"]
+       
         
         if (row["surface"] == "Hard"):
             ELO_tracker = hELO_tracker
@@ -137,6 +140,20 @@ def create_model_data(data):
             ELO_tracker[p1] = 1500
         if p2 not in ELO_tracker:
             ELO_tracker[p2] = 1500
+
+        if p1 not in generalELO_tracker:
+            generalELO_tracker[p1] = 1500
+
+        if p2 not in generalELO_tracker:
+            generalELO_tracker[p2] = 1500
+
+        g1 = generalELO_tracker[p1]
+        g2 = generalELO_tracker[p2]
+
+        p1_general_elo_list.append(g1)
+        p2_general_elo_list.append(g2)
+        
+
 
         #get last 10 results
         p1_ten = form_tracker[p1][-10:]
@@ -176,6 +193,10 @@ def create_model_data(data):
         #expected probability based on ELO
         E_a = 1 / (1 + 10**((p2ELO-p1ELO)/400))
         E_b = 1 - E_a
+
+        E_a_general = 1/(1 + 10**((g2-g1)/400))
+        E_b_general = 1 - E_a_general
+
         # update the tracker with the result of this match for the future
         if target == 1:
             h2h_tracker[matchup_k][p1] += 1
@@ -184,7 +205,8 @@ def create_model_data(data):
             #update ELO with match result
             ELO_tracker[p1] = p1ELO + 32 * (1 - E_a) 
             ELO_tracker[p2] = p2ELO + 32 * (0 - E_b)
-
+            generalELO_tracker[p1] = g1 + 32*(1-E_a_general)
+            generalELO_tracker[p2] = g2 + 32*(0-E_b_general)
 
         else:
             h2h_tracker[matchup_k][p2] += 1
@@ -192,7 +214,8 @@ def create_model_data(data):
             form_tracker[p2].append(1)
             ELO_tracker[p1] = p1ELO + 32 * (0 - E_a) 
             ELO_tracker[p2] = p2ELO + 32 * (1 - E_b)
-
+            generalELO_tracker[p1] = g1 + 32*(0-E_a_general)
+            generalELO_tracker[p2] = g2 + 32*(1-E_b_general)
         
 
     clean_data['p1_historical_h2h_wins'] = p1_h2h_wins
@@ -209,6 +232,13 @@ def create_model_data(data):
     clean_data["p2_surface_elo"] = p2elo_list
     clean_data["surface_elo_diff"] = (
         clean_data["p1_surface_elo"] - clean_data["p2_surface_elo"]
+    )
+    
+    clean_data["p1_general_elo"] = p1_general_elo_list
+    clean_data["p2_general_elo"] = p2_general_elo_list
+
+    clean_data["general_elo_diff"] = (
+        clean_data["p1_general_elo"] - clean_data["p2_general_elo"]
     )
     clean_data = clean_data.reset_index(drop=True)
 

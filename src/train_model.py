@@ -22,7 +22,8 @@ def train_baseline_model(model_data):
         "best_of",
         "rank_points_diff",
         "form_diff",
-        "surface_elo_diff"
+        "surface_elo_diff",
+        "general_elo_diff"
     ]
 
     target = "target"
