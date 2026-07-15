@@ -1,7 +1,6 @@
 from xml.parsers.expat import model
-
+from pathlib import Path
 import pandas as pd
-
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import sklearn.metrics as metrics
@@ -81,9 +80,17 @@ def train_baseline_model(model_data):
     xgb.plot_importance(model)
     plt.tight_layout()
 
+    project_root = Path(__file__).resolve().parent.parent
+    plots_directory = project_root / "plots"
+    plots_directory.mkdir(parents=True, exist_ok=True)
+
+    output_path = plots_directory / "feature_importance.png"
+
     plt.savefig(
-        "../plots/feature_importance.png",
+        output_path,
         dpi=300,
-        bbox_inches="tight" 
+        bbox_inches="tight",
     )
-    return model
+
+    plt.close()
+    print(f"Feature importance saved to: {output_path}")

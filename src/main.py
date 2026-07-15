@@ -1,7 +1,6 @@
-import pandas as pd
-from data_loader import load_data
-from preprocessing import create_model_data
-from train_model import train_baseline_model
+from src.data_loader import load_data
+from src.preprocessing import create_model_data
+from src.train_model import train_baseline_model
 matches = load_data()
 matches.info()
 model_data = create_model_data(matches)
