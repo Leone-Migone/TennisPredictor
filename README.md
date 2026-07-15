@@ -1,67 +1,170 @@
 # TennisPredictor
-This project aims to build a tennis match prediction system using historical ATP match data. The main goal is to explore how player performance, tournament conditions, rankings, and match history can be used to estimate the likely winner of a match. My inspiration for this project came from the youtube channel Green Code.
-## Project LogBook   
-04/06/2026  
-For my first approach this project I decided to initially just use a limited database to then increment progressively the complexity and techicality of the system. I started by defining the repository structure, import the csvs containing the data and starting the preprocessing   
-  
-05/06/2026  
-developed basic idea of evaluation model, i decided to keep it simple initially taking only account of difference in ranking, difference in age, surface of the court and the number of set needed in order to win (3,5) using a logistic regression. with this first model I'm getting a fairly solid first baseline.   
-  
-06/06/2026  
-Added head-to-head statistics and ATP ranking points difference. These features were computed chronologically to avoid data leakage and to simulate a realistic prediction scenario.  
-  
-07/06/2026  
-Changed the evaluation methodology from a random train/test split to a chronological split. Matches before 2024 were used for training and matches from 2024 onward for testing, producing more realistic estimates of predictive performance.  
-  
-08/06/2026  
-Implemented two new features:  
-Recent form, based on the previous ten matches played by each player.  
-Surface-specific Elo ratings (hard, clay and grass).  
-Separate Elo systems were maintained for each surface and updated chronologically after every match. The addition of surface-specific Elo provided the largest improvement so far, increasing accuracy from 64.58% to 65.30%.
 
-09/06/2026
-Experimented with Random Forest as an alternative model. Despite its ability to model non-linear relationships, it performed worse than Logistic Regression on the current feature set.
+An end-to-end machine-learning project for predicting ATP tennis match outcomes from information available before each match.
 
-This suggested that the existing features mainly provided linear predictive information.
+The project uses historical ATP results, rankings, recent form, head-to-head records, general Elo and surface-specific Elo ratings. All stateful features are generated chronologically to prevent future match results from leaking into earlier predictions.
 
-10/06/2026
-Implemented a recent-form feature based on the previous ten matches played by each player. Players with no previous matches were assigned a neutral form value of 0.5.
+## Current Results
 
-The addition of recent form had little impact on overall performance.
+The current XGBoost model is trained on matches before 2024 and evaluated on matches from 2024 onward.
 
-10/06/2026
-Designed and implemented a surface-specific Elo system. Separate ratings were maintained for:
+| Model | Chronological accuracy |
+|---|---:|
+| Logistic Regression baseline | 64.12% |
+| Logistic Regression + H2H | 64.45% |
+| Logistic Regression + ranking points | 64.58% |
+| Logistic Regression + recent form | 64.58% |
+| Logistic Regression + surface Elo | 65.30% |
+| XGBoost + surface and general Elo | **65.42%** |
+| XGBoost + rest days | 65.15% |
 
-- Hard courts
-- Clay courts
-- Grass courts
+The latest complete run processed 45,878 matches and achieved approximately **65.15% accuracy** on a chronological test set of 7,194 matches.
 
-For each match, only information available before that match was used to compute Elo differences. Surface Elo provided the largest improvement seen so far and highlighted the importance of court surface in tennis.
+> Accuracy is currently the primary evaluation metric. Planned improvements include probability calibration, log loss, Brier score, walk-forward validation and comparisons against ranking-only and Elo-only benchmarks.
 
-11/06/2026
-Introduced a general Elo rating in addition to the surface-specific ratings. The idea was to combine overall player strength with surface specialisation.
+## Key Features
 
-This resulted in a further improvement and produced the best performance obtained so far.
+- Chronological train/test separation
+- General player Elo
+- Surface-specific Elo for hard, clay and grass courts
+- Previous head-to-head results
+- Recent form over the previous ten matches
+- ATP ranking and ranking-point differences
+- Player age difference
+- Rest days between matches
+- Logistic Regression, Random Forest and XGBoost comparisons
+- Automated tests for leakage-sensitive feature behaviour
 
-11/06/2026
-Replaced Logistic Regression with XGBoost in order to capture non-linear relationships between features. Tuned several hyperparameters, including:
+## Project Structure
 
-- Number of trees
-- Maximum tree depth
-- Learning rate
-- Row subsampling
-- Column subsampling
+```text
+TennisPredictor/
+├── data/
+│   └── tennis_atp/           # Yearly ATP match CSV files
+├── plots/
+│   └── feature_importance.png
+├── src/
+│   ├── features/
+│   │   ├── builder.py        # Chronological feature construction
+│   │   ├── history.py        # H2H, recent form and rest history
+│   │   └── ratings.py        # General and surface Elo systems
+│   ├── data_loader.py
+│   ├── preprocessing.py      # Compatibility entry point
+│   ├── train_model.py
+│   └── main.py
+├── tests/
+│   └── test_features.py
+├── requirements.txt
+└── README.md
+```
 
-XGBoost achieved the highest accuracy of the project so far, approximately 65.4%.
+## Installation
 
-12/06/2026
-Investigated whether recovery time affected match outcomes by introducing a rest-days feature. The feature measured the number of days since each player's previous match.
+Python 3.11 or 3.12 is recommended.
 
-Contrary to expectations, adding rest days reduced model accuracy. This suggests that recovery time alone does not adequately capture fatigue or match sharpness.
+Clone the repository:
 
+```bash
+git clone https://github.com/Leone-Migone/TennisPredictor.git
+cd TennisPredictor
+```
 
-## Models
-#### 1.Baseline Logistic Regression
+Create a virtual environment:
+
+```bash
+python -m venv .venv
+```
+
+Activate it on Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Activate it on macOS or Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+Install the direct project dependencies:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+## Data
+
+The project expects yearly ATP match files inside:
+
+```text
+data/tennis_atp/
+```
+
+The files must follow this naming pattern:
+
+```text
+atp_matches_2010.csv
+atp_matches_2011.csv
+...
+atp_matches_2026.csv
+```
+
+The historical match data comes from Jeff Sackmann's public tennis datasets. This repository does not maintain the source data.
+
+## Usage
+
+Run all commands from the repository root.
+
+Train and evaluate the current model:
+
+```bash
+python -m src.main
+```
+
+This command:
+
+1. Loads the yearly ATP match data.
+2. Removes rows missing critical pre-match information.
+3. Generates chronological features.
+4. Trains XGBoost on matches before 2024.
+5. Evaluates the model on matches from 2024 onward.
+6. Saves feature importance to `plots/feature_importance.png`.
+
+## Tests
+
+Run the automated tests with:
+
+```bash
+python -m pytest -q
+```
+
+The tests verify that:
+
+- Equal-rated players begin with equal expected probabilities.
+- Elo updates are zero-sum.
+- Surface-specific ratings remain independent.
+- Head-to-head values include only previous matches.
+- Historical state is updated only after the current match’s features are recorded.
+
+## Leakage Prevention
+
+For every match, the pipeline performs operations in this order:
+
+1. Read the players’ existing Elo, form, head-to-head and rest values.
+2. Store those values as the current match’s features.
+3. Record the match result.
+4. Update the historical trackers for future matches.
+
+This ensures that the result of a match cannot influence the features used to predict that same match.
+
+## Feature Importance
+
+![XGBoost feature importance](./plots/feature_importance.png)
+
+## Models and Experiments
+### 1.Baseline Logistic Regression
 The baseline model used only a small number of pre-match features:
 - `rank_diff`: difference between player 1's ATP ranking and player 2's ATP ranking
 - `age_diff`: difference between player 1's age and player 2's age
@@ -70,8 +173,7 @@ The baseline model used only a small number of pre-match features:
 Accuracy: 66%
 
 ### Results
-
-The baseline Logistic Regression model achieved an accuracy of approximately **66%** on the test set.
+Using an initial random train/test split, the baseline achieved approximately **66% accuracy**. After switching to the more realistic chronological split, its accuracy was **64.12%**. The chronological result is used for comparisons with later models.
 
 | Class | Meaning | Precision | Recall | F1-score | Support |
 |---|---|---:|---:|---:|---:|
@@ -288,3 +390,80 @@ After the match, player A's rating is updated using:
 
 where `R_A_new` is the new rating, `K` controls how quickly ratings change, `S_A` is the actual result of the match, with `1` for a win and `0` for a loss, and `E_A` is the expected score before the match.
 
+
+## Project LogBook   
+04/06/2026  
+For my first approach this project I decided to initially just use a limited database to then increment progressively the complexity and techicality of the system. I started by defining the repository structure, import the csvs containing the data and starting the preprocessing   
+  
+05/06/2026  
+developed basic idea of evaluation model, i decided to keep it simple initially taking only account of difference in ranking, difference in age, surface of the court and the number of set needed in order to win (3,5) using a logistic regression. with this first model I'm getting a fairly solid first baseline.   
+  
+06/06/2026  
+Added head-to-head statistics and ATP ranking points difference. These features were computed chronologically to avoid data leakage and to simulate a realistic prediction scenario.  
+  
+07/06/2026  
+Changed the evaluation methodology from a random train/test split to a chronological split. Matches before 2024 were used for training and matches from 2024 onward for testing, producing more realistic estimates of predictive performance.  
+  
+08/06/2026  
+Implemented two new features:  
+Recent form, based on the previous ten matches played by each player.  
+Surface-specific Elo ratings (hard, clay and grass).  
+Separate Elo systems were maintained for each surface and updated chronologically after every match. The addition of surface-specific Elo provided the largest improvement so far, increasing accuracy from 64.58% to 65.30%.
+
+09/06/2026
+Experimented with Random Forest as an alternative model. Despite its ability to model non-linear relationships, it performed worse than Logistic Regression on the current feature set.
+
+This suggested that the existing features mainly provided linear predictive information.
+
+10/06/2026
+Implemented a recent-form feature based on the previous ten matches played by each player. Players with no previous matches were assigned a neutral form value of 0.5.
+
+The addition of recent form had little impact on overall performance.
+
+10/06/2026
+Designed and implemented a surface-specific Elo system. Separate ratings were maintained for:
+
+- Hard courts
+- Clay courts
+- Grass courts
+
+For each match, only information available before that match was used to compute Elo differences. Surface Elo provided the largest improvement seen so far and highlighted the importance of court surface in tennis.
+
+11/06/2026
+Introduced a general Elo rating in addition to the surface-specific ratings. The idea was to combine overall player strength with surface specialisation.
+
+This resulted in a further improvement and produced the best performance obtained so far.
+
+11/06/2026
+Replaced Logistic Regression with XGBoost in order to capture non-linear relationships between features. Tuned several hyperparameters, including:
+
+- Number of trees
+- Maximum tree depth
+- Learning rate
+- Row subsampling
+- Column subsampling
+
+XGBoost achieved the highest accuracy of the project so far, approximately 65.4%.
+
+12/06/2026
+Investigated whether recovery time affected match outcomes by introducing a rest-days feature. The feature measured the number of days since each player's previous match.
+
+Contrary to expectations, adding rest days reduced model accuracy. This suggests that recovery time alone does not adequately capture fatigue or match sharpness.
+
+15/07/2026
+
+Refactored the feature-generation pipeline to improve maintainability, testability and reproducibility.
+
+The original preprocessing function handled player orientation, head-to-head statistics, recent form, rest days and Elo calculations in one large block. These responsibilities were separated into focused components:
+
+- General and surface-specific Elo ratings
+- Head-to-head history
+- Recent-form tracking
+- Rest-day tracking
+- Chronological feature construction
+
+Added automated tests to verify that Elo updates are zero-sum, surface ratings remain independent and historical features only use information available before the current match. This helps protect the model against data leakage.
+
+Also replaced the environment-generated dependency list with the project’s direct dependencies, standardized execution through `python -m src.main`, and made the feature-importance output path independent of the working directory.
+
+After the refactor, the complete pipeline processed 45,878 matches and achieved approximately **65.15% accuracy** on the chronological test set of 7,194 matches. The feature-importance plot was generated successfully in `plots/feature_importance.png`.
